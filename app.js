@@ -1,4 +1,4 @@
-// Config
+// Konfigurasi
 const CONTRACT_ADDRESS = "0xF660448b409A440c2Ca97Eab20A0B0b0fb3c90bC";
 const WALLETCONNECT_ID = "ec3a4a130bfbfcd23c9e540a8e99e718";
 
@@ -6,7 +6,8 @@ const WALLETCONNECT_ID = "ec3a4a130bfbfcd23c9e540a8e99e718";
 console.log("Initializing...");
 const startTime = Date.now();
 
-// Init Web3Modal
+// Inisialisasi Web3Modal
+// Pastikan global variable 'Web3Modal' sudah tersedia dari CDN yang Anda muat
 const web3Modal = new Web3Modal({
   projectId: WALLETCONNECT_ID,
   chains: [{
@@ -32,24 +33,28 @@ const web3Modal = new Web3Modal({
   }
 });
 
-// Wallet Connection
+// Fungsi untuk menghubungkan wallet
 async function connectWallet() {
   console.log("Connection started");
   try {
-    const provider = await web3Modal.openModal();
-    console.log("Provider:", provider);
+    // Menggunakan metode connect() untuk mendapatkan provider
+    const providerInstance = await web3Modal.connect();
+    console.log("Provider instance:", providerInstance);
     
-    provider.on("accountsChanged", (accounts) => {
-      console.log("Accounts changed:", accounts);
-    });
-    
-    const ethersProvider = new ethers.providers.Web3Provider(provider);
+    // Membuat ethers provider dan mendapatkan signer
+    const ethersProvider = new ethers.providers.Web3Provider(providerInstance);
     const signer = ethersProvider.getSigner();
     const address = await signer.getAddress();
     console.log("Connected address:", address);
     
     alert(`Successfully connected: ${address}`);
     
+    // Jika provider mendukung event, pasang listener untuk perubahan akun
+    if (providerInstance.on) {
+      providerInstance.on("accountsChanged", (accounts) => {
+        console.log("Accounts changed:", accounts);
+      });
+    }
   } catch (error) {
     console.error("Connection error:", error);
     alert(`Error: ${error.message}`);
@@ -57,11 +62,11 @@ async function connectWallet() {
   console.log("Connection flow completed");
 }
 
-// Bind click event
+// Binding event klik ke tombol connect
 document.getElementById('connectBtn').addEventListener('click', () => {
   console.log("Button clicked");
   connectWallet();
 });
 
-// Performance check
+// Cek performa inisialisasi
 console.log(`Initialization completed in ${Date.now() - startTime}ms`);
