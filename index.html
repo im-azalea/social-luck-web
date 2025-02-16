@@ -1,27 +1,28 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>SOCIAL LUCK</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: 'unsafe-inline' 'unsafe-eval';">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
-    <script src="https://unpkg.com/@walletconnect/web3modal@2.6.2/dist/umd/index.min.js"></script>
-    <script src="https://unpkg.com/@walletconnect/client@1.7.8/dist/umd/index.min.js"></script>
+  <meta charset="UTF-8">
+  <title>SOCIAL LUCK</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Gabungkan CSP sesuai dengan kebutuhan: pastikan domain yang diperlukan sudah tercantum -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.walletconnect.com http://localhost:*; script-src 'self' 'unsafe-inline' https:; connect-src *; style-src 'self' 'unsafe-inline';">
+  <link rel="stylesheet" href="style.css">
+  <!-- Library yang diperlukan -->
+  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+  <script src="https://unpkg.com/@walletconnect/web3modal@2.6.2/dist/umd/index.min.js"></script>
+  <!-- Jika diperlukan, tetap sertakan walletconnect/client -->
+  <script src="https://unpkg.com/@walletconnect/client@1.7.8/dist/umd/index.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1 class="neon-pink">⚡ SOCIAL LUCK</h1>
-        <div id="timer" class="neon-blue">--:--:--</div>
-        <button id="connectBtn" class="neon-btn">
-            <span id="btnText">CONNECT WALLET</span>
-            <div id="loading" class="loading"></div>
-        </button>
-        <div id="status" class="status"></div>
-    </div>
-    <script src="app.js"></script>
+  <div class="container">
+      <h1 class="neon-pink">⚡ SOCIAL LUCK</h1>
+      <div id="timer" class="neon-blue">--:--:--</div>
+      <button id="connectBtn" class="neon-btn">
+          <span id="btnText">CONNECT WALLET</span>
+          <div id="loading" class="loading"></div>
+      </button>
+      <div id="status" class="status"></div>
+  </div>
+  <script src="app.js"></script>
 </body>
 </html>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.walletconnect.com http://localhost:*; script-src 'self' 'unsafe-inline' https:; connect-src *">
-<script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
