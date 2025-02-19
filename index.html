@@ -90,7 +90,7 @@
   
   <!-- Sertakan ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <!-- Sertakan WalletConnect v2 provider -->
+  <!-- Sertakan WalletConnect v2 provider (UMD build) -->
   <script src="https://unpkg.com/@walletconnect/ethereum-provider@2.0.9/dist/umd/index.min.js"></script>
   <script>
     // Konfigurasi kontrak
@@ -167,8 +167,9 @@
 
     async function connectWallet() {
       try {
-        // Inisialisasi WalletConnect v2 provider dengan Project ID yang sudah kamu buat
-        wcProvider = await EthereumProvider.init({
+        // Gunakan global variable dari UMD build:
+        // Perhatikan perbedaan: kita menggunakan WalletConnectEthereumProvider
+        wcProvider = await WalletConnectEthereumProvider.init({
           projectId: "ec3a4a130bfbfcd23c9e540a8e99e718", // Project ID kamu
           chains: [8453],              // Base mainnet chain ID (8453)
           showQrModal: true,
