@@ -92,6 +92,7 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <!-- Sertakan Reown AppKit UMD build -->
   <script src="https://unpkg.com/@reown/appkit/dist/index.umd.js"></script>
+  
   <script>
     // Konfigurasi kontrak
     const contractAddress = "0xc31a30D5a354e778a38FF9Ee4Be3AaD2B18dE92C";
@@ -117,7 +118,7 @@
         "stateMutability": "view", "type": "function"
       }
     ];
-    const ROUND_DURATION = 21600; // 6 jam (21600 detik)
+    const ROUND_DURATION = 21600; // 6 jam dalam detik
     
     let provider, signer, contract, userAddress;
     let appKit; // Instance Reown AppKit
@@ -125,21 +126,19 @@
     
     async function connectWallet() {
       try {
-        // Pastikan Reown AppKit sudah tersedia di global object
         if (!window.ReownAppKit) {
-          alert("Reown AppKit belum termuat. Pastikan koneksi internet dan script URL sudah benar.");
+          alert("Reown AppKit tidak termuat. Pastikan koneksi internet dan URL script sudah benar.");
           return;
         }
         
-        // Inisialisasi Reown AppKit
+        // Inisialisasi Reown AppKit dengan projectId dan chainId yang sesuai
         appKit = new ReownAppKit({
-          projectId: "ec3a4a130bfbfcd23c9e540a8e99e718",
-          chainId: 8453, // Base mainnet chain ID
-          // Tambahan opsi konfigurasi bisa ditambahkan di sini
+          projectId: "af9628246a335bd72156eb7811874fa4", // Project ID kamu
+          chainId: 8453, // Base Mainnet Chain ID
+          // Tambahkan opsi lain jika diperlukan
         });
         
-        // Hubungkan wallet melalui AppKit
-        // Fungsi connect() akan memunculkan UI koneksi (misalnya daftar wallet)
+        // Hubungkan wallet menggunakan AppKit
         const walletProvider = await appKit.connect();
         
         // Bungkus provider menggunakan ethers.js
