@@ -90,8 +90,8 @@
   
   <!-- Sertakan ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <!-- Sertakan Reown AppKit UMD build -->
-  <script src="https://unpkg.com/@reown/appkit/dist/index.umd.js"></script>
+  <!-- Sertakan Reown AppKit UMD build dengan URL yang diperbarui -->
+  <script src="https://unpkg.com/@reown/appkit@latest/dist/index.umd.min.js"></script>
   
   <script>
     // Konfigurasi kontrak
@@ -135,7 +135,7 @@
         appKit = new ReownAppKit({
           projectId: "af9628246a335bd72156eb7811874fa4", // Project ID kamu
           chainId: 8453, // Base Mainnet Chain ID
-          // Tambahkan opsi lain jika diperlukan
+          debug: true // Opsional: aktifkan debug untuk log lebih rinci
         });
         
         // Hubungkan wallet menggunakan AppKit
@@ -275,3 +275,281 @@
   </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Social Lottery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Desain dengan background hitam dan elemen neon */
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      padding: 20px;
+    }
+    .neon-button {
+      padding: 15px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px;
+      box-shadow: 0 0 10px;
+    }
+    .play-button {
+      background-color: #ff1493; /* Pink neon */
+      color: #fff;
+      box-shadow: 0 0 20px #ff1493;
+    }
+    .joined-button {
+      background-color: #00ff00; /* Hijau neon */
+      color: #000;
+      box-shadow: 0 0 20px #00ff00;
+    }
+    .claim-button {
+      background-color: #00ff00; /* Hijau neon */
+      color: #000;
+      box-shadow: 0 0 20px #00ff00;
+    }
+    .disabled-button {
+      background-color: #ff0000; /* Merah neon */
+      color: #fff;
+      box-shadow: 0 0 20px #ff0000;
+      cursor: not-allowed;
+    }
+    .timer {
+      font-size: 24px;
+      color: #00bfff; /* Biru neon */
+      margin: 20px;
+    }
+    .section {
+      margin: 20px;
+      padding: 10px;
+      border: 1px solid #444;
+      border-radius: 10px;
+    }
+    a {
+      color: #00bfff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Social Lottery</h1>
+    <div id="walletInfo"></div>
+    <button id="connectButton" class="neon-button play-button" onclick="connectWallet()">Connect Wallet</button>
+    
+    <div id="currentRoundSection" class="section" style="display:none;">
+      <h2>Current Round: <span id="currentRound"></span></h2>
+      <div class="timer" id="roundTimer"></div>
+      <div>Total Pool: <span id="totalPool"></span> $SOCIAL</div>
+      <div id="joinSection">
+        <button id="joinButton" class="neon-button play-button" onclick="joinRound()">Play</button>
+      </div>
+    </div>
+    
+    <div id="previousRoundSection" class="section" style="display:none;">
+      <h2>Previous Round</h2>
+      <div>Winner: <span id="prevWinner"></span></div>
+      <div>Prize: <span id="prevPrize"></span> $SOCIAL</div>
+      <button id="claimButton" class="neon-button claim-button" onclick="claimPrize()">Claim Prize</button>
+    </div>
+    
+    <button id="shareButton" class="neon-button" onclick="shareLink()">Share</button>
+  </div>
+  
+  <!-- Sertakan ethers.js -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <!-- Sertakan Reown AppKit UMD build dengan URL yang diperbarui -->
+  <script src="https://unpkg.com/@reown/appkit@latest/dist/index.umd.min.js"></script>
+  
+  <script>
+    // Konfigurasi kontrak
+    const contractAddress = "0xc31a30D5a354e778a38FF9Ee4Be3AaD2B18dE92C";
+    const contractABI = [
+      { "inputs": [], "name": "join", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [], "name": "getCurrentRound", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function" },
+      { "inputs": [{"internalType": "uint256", "name": "_round", "type": "uint256"}], "name": "drawWinner", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [{"internalType": "uint256", "name": "_round", "type": "uint256"}], "name": "claimPrize", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "name": "rounds", "outputs": [
+          {"internalType": "address[]", "name": "participants", "type": "address[]"},
+          {"internalType": "uint256", "name": "totalPool", "type": "uint256"},
+          {"internalType": "address", "name": "winner", "type": "address"},
+          {"internalType": "bool", "name": "drawn", "type": "bool"},
+          {"internalType": "bool", "name": "claimed", "type": "bool"}
+      ], "stateMutability": "view", "type": "function" },
+      { "inputs": [{"internalType": "uint256", "name": "", "type": "uint256"}, {"internalType": "address", "name": "", "type": "address"}],
+        "name": "hasJoined",
+        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      { "inputs": [], "name": "startTime", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+        "stateMutability": "view", "type": "function"
+      }
+    ];
+    const ROUND_DURATION = 21600; // 6 jam dalam detik
+    
+    let provider, signer, contract, userAddress;
+    let appKit; // Instance Reown AppKit
+    let timerInterval; // Untuk update timer UI
+    
+    async function connectWallet() {
+      try {
+        if (!window.ReownAppKit) {
+          alert("Reown AppKit tidak termuat. Pastikan koneksi internet dan URL script sudah benar.");
+          return;
+        }
+        
+        // Inisialisasi Reown AppKit dengan projectId dan chainId yang sesuai
+        appKit = new ReownAppKit({
+          projectId: "af9628246a335bd72156eb7811874fa4", // Project ID kamu
+          chainId: 8453, // Base Mainnet Chain ID
+          debug: true // Opsional: aktifkan debug untuk log lebih rinci
+        });
+        
+        // Hubungkan wallet menggunakan AppKit
+        const walletProvider = await appKit.connect();
+        
+        // Bungkus provider menggunakan ethers.js
+        provider = new ethers.providers.Web3Provider(walletProvider);
+        signer = provider.getSigner();
+        userAddress = await signer.getAddress();
+        
+        document.getElementById("walletInfo").innerText = "Connected: " + userAddress;
+        document.getElementById("connectButton").style.display = "none";
+        localStorage.setItem("walletConnected", "true");
+        
+        // Inisialisasi instance kontrak
+        contract = new ethers.Contract(contractAddress, contractABI, signer);
+        
+        // Tampilkan bagian current round
+        document.getElementById("currentRoundSection").style.display = "block";
+        
+        // Mulai refresh UI dan timer
+        refreshUI();
+        if (!timerInterval) {
+          timerInterval = setInterval(updateTimer, 1000);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Failed to connect wallet: " + err.message);
+      }
+    }
+    
+    async function refreshUI() {
+      try {
+        const currentRound = await contract.getCurrentRound();
+        document.getElementById("currentRound").innerText = currentRound.toString();
+        
+        const roundInfo = await contract.rounds(currentRound);
+        const totalPool = ethers.utils.formatUnits(roundInfo.totalPool, 18);
+        document.getElementById("totalPool").innerText = totalPool;
+        
+        const joined = await contract.hasJoined(currentRound, userAddress);
+        const joinSection = document.getElementById("joinSection");
+        if (joined) {
+          joinSection.innerHTML = '<button class="neon-button joined-button" disabled>You have joined</button>';
+        } else {
+          joinSection.innerHTML = '<button id="joinButton" class="neon-button play-button" onclick="joinRound()">Play</button>';
+        }
+        
+        if (currentRound > 1) {
+          const prevRound = currentRound - 1;
+          const prevRoundInfo = await contract.rounds(prevRound);
+          if (prevRoundInfo.drawn) {
+            document.getElementById("previousRoundSection").style.display = "block";
+            document.getElementById("prevWinner").innerText = prevRoundInfo.winner;
+            const prize = ethers.utils.formatUnits(prevRoundInfo.totalPool.mul(95).div(100), 18);
+            document.getElementById("prevPrize").innerText = prize;
+            
+            if (prevRoundInfo.winner.toLowerCase() === userAddress.toLowerCase() && !prevRoundInfo.claimed) {
+              document.getElementById("claimButton").disabled = false;
+              document.getElementById("claimButton").className = "neon-button claim-button";
+            } else {
+              document.getElementById("claimButton").disabled = true;
+              document.getElementById("claimButton").className = "neon-button disabled-button";
+            }
+          } else {
+            document.getElementById("previousRoundSection").style.display = "none";
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    
+    async function updateTimer() {
+      try {
+        const startTimeBN = await contract.startTime();
+        const startTimeVal = startTimeBN.toNumber();
+        const now = Math.floor(Date.now() / 1000);
+        const elapsed = now - startTimeVal;
+        const timeInCurrentRound = elapsed % ROUND_DURATION;
+        const remaining = ROUND_DURATION - timeInCurrentRound;
+        
+        const hours = Math.floor(remaining / 3600);
+        const minutes = Math.floor((remaining % 3600) / 60);
+        const seconds = remaining % 60;
+        document.getElementById("roundTimer").innerText =
+          `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    
+    async function joinRound() {
+      try {
+        const tx = await contract.join();
+        await tx.wait();
+        alert("Joined successfully!");
+        refreshUI();
+      } catch (err) {
+        console.error(err);
+        alert("Failed to join round");
+      }
+    }
+    
+    async function claimPrize() {
+      try {
+        const currentRound = await contract.getCurrentRound();
+        const roundToClaim = currentRound - 1;
+        const tx = await contract.claimPrize(roundToClaim);
+        await tx.wait();
+        alert("Prize claimed successfully!");
+        refreshUI();
+      } catch (err) {
+        console.error(err);
+        alert("Failed to claim prize");
+      }
+    }
+    
+    function shareLink() {
+      const shareData = {
+        title: 'Social Lottery',
+        text: 'Join the Social Lottery on Base Mainnet!',
+        url: window.location.href + ' | Warpcast: @azalea'
+      };
+      if (navigator.share) {
+        navigator.share(shareData).catch(console.error);
+      } else {
+        prompt("Copy this link:", shareData.url);
+      }
+    }
+    
+    window.addEventListener('load', () => {
+      if (localStorage.getItem("walletConnected") === "true") {
+        connectWallet();
+      }
+    });
+  </script>
+</body>
+</html>
+ 
