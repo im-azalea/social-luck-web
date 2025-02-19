@@ -90,8 +90,8 @@
   
   <!-- Sertakan ethers.js -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <!-- Sertakan WalletConnect v2 provider (UMD build) -->
-  <script src="https://unpkg.com/@walletconnect/ethereum-provider@2.0.9/dist/umd/index.min.js"></script>
+  <!-- Sertakan Reown AppKit UMD build -->
+  <script src="https://unpkg.com/@reown/appkit/dist/index.umd.js"></script>
   <script>
     // Konfigurasi kontrak
     const contractAddress = "0xc31a30D5a354e778a38FF9Ee4Be3AaD2B18dE92C";
@@ -117,29 +117,36 @@
         "stateMutability": "view", "type": "function"
       }
     ];
-    const ROUND_DURATION = 21600; // 6 jam dalam detik
-
+    const ROUND_DURATION = 21600; // 6 jam (21600 detik)
+    
     let provider, signer, contract, userAddress;
-    let wcProvider; // Instance WalletConnect
-    let timerInterval; // Interval untuk timer
-
+    let appKit; // Instance Reown AppKit
+    let timerInterval; // Untuk update timer UI
+    
     async function connectWallet() {
       try {
-        // Cek apakah global WalletConnectProvider tersedia
-        if (!window.WalletConnectProvider) {
-          alert("WalletConnectProvider is not loaded. Pastikan koneksi internet dan URL script sudah benar.");
+        // Pastikan Reown AppKit sudah tersedia di global object
+        if (!window.ReownAppKit) {
+          alert("Reown AppKit belum termuat. Pastikan koneksi internet dan script URL sudah benar.");
           return;
         }
-        // Inisialisasi WalletConnect v2 provider menggunakan global WalletConnectProvider
-        wcProvider = await WalletConnectProvider.init({
-          projectId: "ec3a4a130bfbfcd23c9e540a8e99e718", // Project ID kamu
-          chains: [8453],              // Base mainnet chain ID (8453)
-          showQrModal: true,
+        
+        // Inisialisasi Reown AppKit
+        appKit = new ReownAppKit({
+          projectId: "ec3a4a130bfbfcd23c9e540a8e99e718",
+          chainId: 8453, // Base mainnet chain ID
+          // Tambahan opsi konfigurasi bisa ditambahkan di sini
         });
-        await wcProvider.connect();
-        provider = new ethers.providers.Web3Provider(wcProvider);
+        
+        // Hubungkan wallet melalui AppKit
+        // Fungsi connect() akan memunculkan UI koneksi (misalnya daftar wallet)
+        const walletProvider = await appKit.connect();
+        
+        // Bungkus provider menggunakan ethers.js
+        provider = new ethers.providers.Web3Provider(walletProvider);
         signer = provider.getSigner();
         userAddress = await signer.getAddress();
+        
         document.getElementById("walletInfo").innerText = "Connected: " + userAddress;
         document.getElementById("connectButton").style.display = "none";
         localStorage.setItem("walletConnected", "true");
@@ -157,7 +164,7 @@
         }
       } catch (err) {
         console.error(err);
-        alert("Failed to connect wallet");
+        alert("Failed to connect wallet: " + err.message);
       }
     }
     
@@ -215,7 +222,7 @@
         const hours = Math.floor(remaining / 3600);
         const minutes = Math.floor((remaining % 3600) / 60);
         const seconds = remaining % 60;
-        document.getElementById("roundTimer").innerText = 
+        document.getElementById("roundTimer").innerText =
           `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
       } catch (err) {
         console.error(err);
@@ -261,7 +268,6 @@
       }
     }
     
-    // Opsional: Auto reconnect jika wallet sudah pernah tersambung
     window.addEventListener('load', () => {
       if (localStorage.getItem("walletConnected") === "true") {
         connectWallet();
