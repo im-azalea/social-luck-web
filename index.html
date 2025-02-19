@@ -96,80 +96,42 @@
     // Konfigurasi kontrak
     const contractAddress = "0xc31a30D5a354e778a38FF9Ee4Be3AaD2B18dE92C";
     const contractABI = [
-      {
-        "inputs": [],
-        "name": "join",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [],
-        "name": "getCurrentRound",
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {"internalType": "uint256", "name": "_round", "type": "uint256"}
-        ],
-        "name": "drawWinner",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {"internalType": "uint256", "name": "_round", "type": "uint256"}
-        ],
-        "name": "claimPrize",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-        "name": "rounds",
-        "outputs": [
+      { "inputs": [], "name": "join", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [], "name": "getCurrentRound", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function" },
+      { "inputs": [{"internalType": "uint256", "name": "_round", "type": "uint256"}], "name": "drawWinner", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [{"internalType": "uint256", "name": "_round", "type": "uint256"}], "name": "claimPrize", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "name": "rounds", "outputs": [
           {"internalType": "address[]", "name": "participants", "type": "address[]"},
           {"internalType": "uint256", "name": "totalPool", "type": "uint256"},
           {"internalType": "address", "name": "winner", "type": "address"},
           {"internalType": "bool", "name": "drawn", "type": "bool"},
           {"internalType": "bool", "name": "claimed", "type": "bool"}
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {"internalType": "uint256", "name": "", "type": "uint256"},
-          {"internalType": "address", "name": "", "type": "address"}
-        ],
+      ], "stateMutability": "view", "type": "function" },
+      { "inputs": [{"internalType": "uint256", "name": "", "type": "uint256"}, {"internalType": "address", "name": "", "type": "address"}],
         "name": "hasJoined",
         "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
         "stateMutability": "view",
         "type": "function"
       },
-      {
-        "inputs": [],
-        "name": "startTime",
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-        "stateMutability": "view",
-        "type": "function"
+      { "inputs": [], "name": "startTime", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+        "stateMutability": "view", "type": "function"
       }
     ];
     const ROUND_DURATION = 21600; // 6 jam dalam detik
-    
+
     let provider, signer, contract, userAddress;
     let wcProvider; // Instance WalletConnect
     let timerInterval; // Interval untuk timer
 
     async function connectWallet() {
       try {
-        // Gunakan global variable dari UMD build:
-        // Perhatikan perbedaan: kita menggunakan WalletConnectEthereumProvider
-        wcProvider = await WalletConnectEthereumProvider.init({
+        // Cek apakah global WalletConnectProvider tersedia
+        if (!window.WalletConnectProvider) {
+          alert("WalletConnectProvider is not loaded. Pastikan koneksi internet dan URL script sudah benar.");
+          return;
+        }
+        // Inisialisasi WalletConnect v2 provider menggunakan global WalletConnectProvider
+        wcProvider = await WalletConnectProvider.init({
           projectId: "ec3a4a130bfbfcd23c9e540a8e99e718", // Project ID kamu
           chains: [8453],              // Base mainnet chain ID (8453)
           showQrModal: true,
@@ -201,16 +163,13 @@
     
     async function refreshUI() {
       try {
-        // Dapatkan current round dari kontrak
         const currentRound = await contract.getCurrentRound();
         document.getElementById("currentRound").innerText = currentRound.toString();
         
-        // Dapatkan info round saat ini
         const roundInfo = await contract.rounds(currentRound);
         const totalPool = ethers.utils.formatUnits(roundInfo.totalPool, 18);
         document.getElementById("totalPool").innerText = totalPool;
         
-        // Cek apakah user sudah join di round saat ini
         const joined = await contract.hasJoined(currentRound, userAddress);
         const joinSection = document.getElementById("joinSection");
         if (joined) {
@@ -219,7 +178,6 @@
           joinSection.innerHTML = '<button id="joinButton" class="neon-button play-button" onclick="joinRound()">Play</button>';
         }
         
-        // Update info round sebelumnya (jika currentRound > 1)
         if (currentRound > 1) {
           const prevRound = currentRound - 1;
           const prevRoundInfo = await contract.rounds(prevRound);
@@ -279,7 +237,7 @@
     async function claimPrize() {
       try {
         const currentRound = await contract.getCurrentRound();
-        const roundToClaim = currentRound - 1; // klaim untuk round sebelumnya
+        const roundToClaim = currentRound - 1;
         const tx = await contract.claimPrize(roundToClaim);
         await tx.wait();
         alert("Prize claimed successfully!");
@@ -303,7 +261,7 @@
       }
     }
     
-    // Opsional: Jika wallet sudah tersambung sebelumnya, auto reconnect
+    // Opsional: Auto reconnect jika wallet sudah pernah tersambung
     window.addEventListener('load', () => {
       if (localStorage.getItem("walletConnected") === "true") {
         connectWallet();
